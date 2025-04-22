@@ -27,7 +27,7 @@ roc_auc = auc(fpr, tpr)
 # Draw ROC curve
 plt.figure()
 plt.plot(fpr, tpr, color='blue', lw=2, label=f'ROC curve (area = {roc_auc:.2f})')
-plt.plot([0, 1], [0, 1], color='gray', linestyle='--')  # 对角线
+plt.plot([0, 1], [0, 1], color='gray', linestyle='--')
 plt.xlim([0.0, 1.0])
 plt.ylim([0.0, 1.05])
 plt.xlabel('False Positive Rate')
