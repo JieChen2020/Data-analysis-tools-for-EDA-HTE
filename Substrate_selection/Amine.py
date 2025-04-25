@@ -45,7 +45,7 @@ def save_to_csv(amine, output_file):
         writer.writeheader()
 
         for smiles, mol_id in amine:
-            writer.writerow({'SMILES': smiles, 'ID': mol_id, 'Type': 'Boron Ester'})
+            writer.writerow({'SMILES': smiles, 'ID': mol_id, 'Type': 'Amine'})
 
 
 smi_file_path = 'mcule_purchasable_in_stock_250309.smi'
