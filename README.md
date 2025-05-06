@@ -96,6 +96,8 @@ data = pd.read_csv(file_path)
 
 ## **Tool 4: Substrate_selection**
 
+Matching molecules using regular expressions of SMILES and rdkit (mol.HasSubstructMatch).
+
 #### Requirements
 
 1. Python 3.12
@@ -103,7 +105,7 @@ data = pd.read_csv(file_path)
 
 #### How to use
 
-1. Download Mcule In Stock (mcule_purchasable_in_stock_250309.smi) from https://mcule.com/database/.
+1. Download Mcule In Stock ('mcule_purchasable_in_stock_250309.smi') from https://mcule.com/database/.
 2. Load 'mcule_purchasable_in_stock_250309.smi' or SMI file with the same format.
 
 ```python
@@ -128,4 +130,21 @@ pattern5 = Chem.MolFromSmarts('[NH]1CCCC1')
 pattern6 = Chem.MolFromSmarts('C1CN(C)CC[NH]1')
 pattern7 = Chem.MolFromSmarts('C1C=CC=C(C[NH]C)C=1')
 pattern = Chem.MolFromSmarts('C(=O)[OH]')
+```
+
+## **Tool 5: TSNE_curve**
+
+For more information, see: https://chemplot.readthedocs.io/en/latest/index.html
+
+#### Requirements
+
+1. Python 3.12
+2. chemplot 1.3.1
+
+#### How to use
+
+1. Load 'filtered_molecules.csv' or CSV file with the same format.
+
+```python
+data_BBBP = read_csv('filtered_molecules.csv')
 ```
