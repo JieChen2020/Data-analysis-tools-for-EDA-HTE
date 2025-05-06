@@ -8,7 +8,7 @@ Some data analysis tools for high-throughput experimentation using the encapsula
 
 1. Python 3.12
 2. rdkit 2024.9.6
-3. scikt-learn 1.6.1
+3. scikit-learn 1.6.1
 4. langchain 0.3.24
 5. langchain-community 0.3.23
 6. langchain-core 0.3.56
@@ -54,3 +54,27 @@ if __name__ == "__main__":
     run_langchain(prompt, tools)
 ```
 
+## **Tool 2: ROC_curve**
+
+#### Requirements
+
+1. Python 3.12
+2. scikit-learn 1.6.1
+
+#### How to use
+
+1. Import 'acidamine_result_w_probs.csv' or CSV file with the same format
+
+```python
+# Reading a CSV file
+file_path = 'acidamine_result_w_probs.csv'
+df = pd.read_csv(file_path)
+
+# Use a 0.5 threshold to convert probabilities to classification results
+df['predicted'] = (df['prob'] >= 0.5).astype(int)
+
+# Calculate ROC curve data
+fpr, tpr, thresholds = roc_curve(df['gt'], df['prob'])
+```
+
+2. ![Figure_1](assets/Figure_1.png)
