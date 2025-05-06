@@ -7,6 +7,7 @@ from rdkit.Chem import AllChem, Descriptors
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+from rdkit.Chem.rdFingerprintGenerator import GetMorganGenerator
 
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.metrics import accuracy_score
@@ -18,11 +19,17 @@ from sklearn.metrics import confusion_matrix
 from sklearn.neural_network import MLPClassifier
 import seaborn as sns
 
-from langchain.agents import load_tools
+from langchain_community.agent_toolkits.load_tools import load_tools
 from langchain.tools import Tool
 from langchain_openai import ChatOpenAI
 from langchain import hub
 from langchain.agents import AgentExecutor, create_react_agent
+import langsmith
+
+# os.environ["LANGCHAIN_TRACING_V2"] = ""
+# os.environ["LANGCHAIN_ENDPOINT"] = ""
+# os.environ["LANGCHAIN_API_KEY"] = ""
+# os.environ["LANGCHAIN_PROJECT"] = ""
 
 
 def param_decorator(func):
@@ -70,8 +77,8 @@ def Generate_Morganfingerprints_from_csv(csv_name: str, radius: str, size: str):
     RADIUS = int(radius)
     SIZE = int(size)
     # print(f"\nRADIUS:{RADIUS}\nSIZE:{SIZE}")
-    test_data_input_path = "backend_langchain/tmp/ChemLab_2/demo_test.csv"
-    test_data_output_path = f'backend_langchain/tmp/ChemLab_2/demo_test_morgan_fingerprints_{RADIUS}_{SIZE}.csv'  # Output CSV file name
+    test_data_input_path = "D:/PythonProject/Chem_AI/demo_test.csv"
+    test_data_output_path = f'D:/PythonProject/Chem_AI/demo_test_morgan_fingerprints_{RADIUS}_{SIZE}.csv'  # Output CSV file name
 
     # Read the input CSV file
     data = pd.read_csv(test_data_input_path)
@@ -88,7 +95,8 @@ def Generate_Morganfingerprints_from_csv(csv_name: str, radius: str, size: str):
             mol = Chem.MolFromSmiles(smi)
             if mol:
                 # Generate Morgan fingerprints with radius 3 and 512 bits
-                morgan_fp = AllChem.GetMorganFingerprintAsBitVect(mol, RADIUS, nBits=SIZE)
+                generator = GetMorganGenerator(radius=RADIUS, fpSize=SIZE)
+                morgan_fp = generator.GetFingerprint(mol)
                 # Convert the fingerprint to a binary string representation
                 binary_string = morgan_fp.ToBitString()
                 row_fps.append(binary_string)
@@ -107,8 +115,8 @@ def Generate_Morganfingerprints_from_csv(csv_name: str, radius: str, size: str):
     return f"\nSMILES strings in the {csv_name} file have been processed, and the morgan fingerprints features are saved to the path {test_data_output_path}\n"
 
 
-# @param_decorator
-def Generate_Simplified_Morganfingerprints_from_csv(csv_name: str):
+@param_decorator
+def Generate_Simplified_Morganfingerprints_from_csv(csv_name: str, radius: str, size: str):
     """
     Generate Simplified morgan fingerprints for the SMILES strings in a CSV file and save to a new CSV file.
 
@@ -117,15 +125,17 @@ def Generate_Simplified_Morganfingerprints_from_csv(csv_name: str):
 
     Returns:
         str: Message indicating the completion of processing and the path to the output CSV file.
-    
+
+    Note: Your input should ideally be in the form of something like 'csv_name=filename.csv, radius=3, size=512'
+
     """
     global RADIUS, SIZE
 
     RADIUS = int(radius)
     SIZE = int(size)
     # print(f"\nRADIUS:{RADIUS}\nSIZE:{SIZE}")
-    test_data_input_path = "backend_langchain/tmp/ChemLab_2/simpilified_demo_test.csv"
-    test_data_output_path = f'backend_langchain/tmp/ChemLab_2/demo_test_simpilified_morgan_fingerprints_{RADIUS}_{SIZE}.csv'  # Output CSV file name
+    test_data_input_path = "D:/PythonProject/Chem_AI/simpilified_demo_test.csv"
+    test_data_output_path = f'D:/PythonProject/Chem_AI/demo_test_simpilified_morgan_fingerprints_{RADIUS}_{SIZE}.csv'  # Output CSV file name
 
     # Read the input CSV file
     data = pd.read_csv(test_data_input_path)
@@ -142,7 +152,8 @@ def Generate_Simplified_Morganfingerprints_from_csv(csv_name: str):
             mol = Chem.MolFromSmiles(smi)
             if mol:
                 # Generate Morgan fingerprints with radius 3 and 512 bits
-                morgan_fp = AllChem.GetMorganFingerprintAsBitVect(mol, RADIUS, nBits=SIZE)
+                generator = GetMorganGenerator(radius=RADIUS, fpSize=SIZE)
+                morgan_fp = generator.GetFingerprint(mol)
                 # Convert the fingerprint to a binary string representation
                 binary_string = morgan_fp.ToBitString()
                 row_fps.append(binary_string)
@@ -171,8 +182,8 @@ def Generate_RDKitDescriptors_from_csv(csv_name: str):
     Returns:
         str: Message indicating the completion of processing and the path to the output CSV file.
     """
-    test_data_input_path = "demo_test.csv"
-    test_data_output_path = 'demo_test_RDKit_descriptors.csv'
+    test_data_input_path = "D:/PythonProject/Chem_AI/demo_test.csv"
+    test_data_output_path = f'D:/PythonProject/Chem_AI/demo_test_descriptors.csv'
 
     data = pd.read_csv(test_data_input_path)
     if len(data.columns) < 3:
@@ -298,12 +309,12 @@ def MLP_Classifier_RDKitDescriptors(csv_name: str):
         str: A string describing the accuracy of the model on the training set and test set.
     """
     y_label_index = -1
-    test_data_output_path = 'backend_langchain/tmp/ChemLab_2/demo_test_descriptors.csv'
+    test_data_output_path = 'D:/PythonProject/Chem_AI/demo_test_descriptors.csv'
 
     try:
         X, y = load_and_prepare_RDKitdescriptors_data(test_data_output_path, y_label_index)
 
-        model = MLPClassifier(max_iter=600)
+        model = MLPClassifier(max_iter=800)
         kfold = KFold(n_splits=10, shuffle=True, random_state=42)
         results = cross_val_score(model, X, y, cv=kfold)
 
@@ -327,12 +338,102 @@ def MLP_Classifier_Morganfingerprints(csv_name: str):
 
     """
     global RADIUS, SIZE
-    test_data_output_path = f'backend_langchain/tmp/ChemLab_2/demo_test_morgan_fingerprints_{RADIUS}_{SIZE}.csv'
+    test_data_output_path = f'D:/PythonProject/Chem_AI/demo_test_morgan_fingerprints_{RADIUS}_{SIZE}.csv'
 
     try:
         X, y = load_and_prepare_Morganfingerprints_data(test_data_output_path, y_label_index)
 
-        model = MLPClassifier(max_iter=300)
+        model = MLPClassifier(max_iter=500)
+        kfold = KFold(n_splits=10, shuffle=True, random_state=42)
+        results = cross_val_score(model, X, y, cv=kfold)
+
+        res = f"\nAverage Accuracy: {results.mean()}\n"
+
+        return res
+    except Exception as e:
+        return f"Error during model training or evaluation: {str(e)}"
+
+
+def RandomForest_Classifier_Morganfingerprints(csv_name: str):
+    """
+    The RandomForest algorithm trained based on the Morgan fingerprints data set is only used to predict the Morgan fingerprints data set.
+
+    Args:
+        csv_name: The name of the Morgan fingerprint data file used for the prediction model.
+
+    return:
+        str: A string describing the accuracy of the model on the training set and test set.
+
+    Note: Your input only needs to contain the file name, without any additional information. For example, your input should be "filename.csv" instead of "csv_name='filename.csv'"
+
+    """
+    global RADIUS, SIZE
+    test_data_output_path = f'D:/PythonProject/Chem_AI/demo_test_morgan_fingerprints_{RADIUS}_{SIZE}.csv'
+
+    try:
+        X, y = load_and_prepare_Morganfingerprints_data(test_data_output_path, y_label_index)
+
+        model = RandomForestClassifier()
+        kfold = KFold(n_splits=10, shuffle=True, random_state=42)
+        results = cross_val_score(model, X, y, cv=kfold)
+
+        res = f"\nAverage Accuracy: {results.mean()}\n"
+
+        return res
+    except Exception as e:
+        return f"Error during model training or evaluation: {str(e)}"
+
+
+def AdaBoost_Classifier_Morganfingerprints(csv_name: str):
+    """
+    The AdaBoost algorithm trained based on the Morgan fingerprints data set is only used to predict the Morgan fingerprints data set.
+
+    Args:
+        csv_name: The name of the Morgan fingerprint data file used for the prediction model.
+
+    return:
+        str: A string describing the accuracy of the model on the training set and test set.
+
+    Note: Your input only needs to contain the file name, without any additional information. For example, your input should be "filename.csv" instead of "csv_name='filename.csv'"
+
+    """
+    global RADIUS, SIZE
+    test_data_output_path = f'D:/PythonProject/Chem_AI/demo_test_morgan_fingerprints_{RADIUS}_{SIZE}.csv'
+
+    try:
+        X, y = load_and_prepare_Morganfingerprints_data(test_data_output_path, y_label_index)
+
+        model = AdaBoostClassifier()
+        kfold = KFold(n_splits=10, shuffle=True, random_state=42)
+        results = cross_val_score(model, X, y, cv=kfold)
+
+        res = f"\nAverage Accuracy: {results.mean()}\n"
+
+        return res
+    except Exception as e:
+        return f"Error during model training or evaluation: {str(e)}"
+
+
+def KNeighbors_Classifier_Morganfingerprints(csv_name: str):
+    """
+    The KNeighbors algorithm trained based on the Morgan fingerprints data set is only used to predict the Morgan fingerprints data set.
+
+    Args:
+        csv_name: The name of the Morgan fingerprint data file used for the prediction model.
+
+    return:
+        str: A string describing the accuracy of the model on the training set and test set.
+
+    Note: Your input only needs to contain the file name, without any additional information. For example, your input should be "filename.csv" instead of "csv_name='filename.csv'"
+
+    """
+    global RADIUS, SIZE
+    test_data_output_path = f'D:/PythonProject/Chem_AI/demo_test_morgan_fingerprints_{RADIUS}_{SIZE}.csv'
+
+    try:
+        X, y = load_and_prepare_Morganfingerprints_data(test_data_output_path, y_label_index)
+
+        model = KNeighborsClassifier()
         kfold = KFold(n_splits=10, shuffle=True, random_state=42)
         results = cross_val_score(model, X, y, cv=kfold)
 
@@ -369,13 +470,106 @@ def MLP_Classifier_Simplified_Morganfingerprints(csv_name: str):
 
     """
     global RADIUS, SIZE
-    test_data_output_path = f'backend_langchain/tmp/ChemLab_2/demo_test_simpilified_morgan_fingerprints_{RADIUS}_{SIZE}.csv'  # Output CSV file name
+    test_data_output_path = f'D:/PythonProject/Chem_AI/demo_test_simpilified_morgan_fingerprints_{RADIUS}_{SIZE}.csv'  # Output CSV file name
 
     try:
 
         X, y = load_and_prepare_Morganfingerprints_data(test_data_output_path, y_label_index)
 
-        model = MLPClassifier(max_iter=300)
+        model = MLPClassifier(max_iter=500)
+        kfold = KFold(n_splits=10, shuffle=True, random_state=42)
+        # 对模型进行 10 倍交叉验证
+        results = cross_val_score(model, X, y, cv=kfold)
+        # 输出平均准确率
+        res = f"\nAverage Accuracy: {results.mean()}\n"
+        return res
+    except Exception as e:
+        return f"Error during model training or evaluation: {str(e)}"
+
+
+def RandomForest_Classifier_Simplified_Morganfingerprints(csv_name: str):
+    """
+    The RandomForest algorithm trained based on the Simplified Morgan fingerprints data set is only used to predict the Simplified Morgan fingerprints data set.
+
+    Args:
+        csv_name: The name of the Simplified Morgan fingerprint data file used for the prediction model.
+
+    return:
+        str: A string describing the accuracy of the model on the training set and test set.
+
+    Note: Your input only needs to contain the file name, without any additional information. For example, your input should be "filename.csv" instead of "csv_name='filename.csv'"
+
+    """
+    global RADIUS, SIZE
+    test_data_output_path = f'D:/PythonProject/Chem_AI/demo_test_simpilified_morgan_fingerprints_{RADIUS}_{SIZE}.csv'  # Output CSV file name
+
+    try:
+
+        X, y = load_and_prepare_Morganfingerprints_data(test_data_output_path, y_label_index)
+
+        model = RandomForestClassifier()
+        kfold = KFold(n_splits=10, shuffle=True, random_state=42)
+        # 对模型进行 10 倍交叉验证
+        results = cross_val_score(model, X, y, cv=kfold)
+        # 输出平均准确率
+        res = f"\nAverage Accuracy: {results.mean()}\n"
+        return res
+    except Exception as e:
+        return f"Error during model training or evaluation: {str(e)}"
+
+
+def AdaBoost_Classifier_Simplified_Morganfingerprints(csv_name: str):
+    """
+    The AdaBoost algorithm trained based on the Simplified Morgan fingerprints data set is only used to predict the Simplified Morgan fingerprints data set.
+
+    Args:
+        csv_name: The name of the Simplified Morgan fingerprint data file used for the prediction model.
+
+    return:
+        str: A string describing the accuracy of the model on the training set and test set.
+
+    Note: Your input only needs to contain the file name, without any additional information. For example, your input should be "filename.csv" instead of "csv_name='filename.csv'"
+
+    """
+    global RADIUS, SIZE
+    test_data_output_path = f'D:/PythonProject/Chem_AI/demo_test_simpilified_morgan_fingerprints_{RADIUS}_{SIZE}.csv'  # Output CSV file name
+
+    try:
+
+        X, y = load_and_prepare_Morganfingerprints_data(test_data_output_path, y_label_index)
+
+        model = AdaBoostClassifier()
+        kfold = KFold(n_splits=10, shuffle=True, random_state=42)
+        # 对模型进行 10 倍交叉验证
+        results = cross_val_score(model, X, y, cv=kfold)
+        # 输出平均准确率
+        res = f"\nAverage Accuracy: {results.mean()}\n"
+        return res
+    except Exception as e:
+        return f"Error during model training or evaluation: {str(e)}"
+
+
+def KNeighbors_Classifier_Simplified_Morganfingerprints(csv_name: str):
+    """
+    The KNeighbors algorithm trained based on the Simplified Morgan fingerprints data set is only used to predict the Simplified Morgan fingerprints data set.
+
+    Args:
+        csv_name: The name of the Simplified Morgan fingerprint data file used for the prediction model.
+
+    return:
+        str: A string describing the accuracy of the model on the training set and test set.
+
+    Note: Your input only needs to contain the file name, without any additional information. For example, your input should be "filename.csv" instead of "csv_name='filename.csv'"
+
+    """
+    global RADIUS, SIZE
+    test_data_output_path = f'D:/PythonProject/Chem_AI/demo_test_simpilified_morgan_fingerprints_{RADIUS}_{SIZE}.csv'  # Output CSV file name
+
+    try:
+
+        X, y = load_and_prepare_Morganfingerprints_data(test_data_output_path, y_label_index)
+
+        model = KNeighborsClassifier()
         kfold = KFold(n_splits=10, shuffle=True, random_state=42)
         # 对模型进行 10 倍交叉验证
         results = cross_val_score(model, X, y, cv=kfold)
@@ -397,7 +591,7 @@ def RandomForest_Classifier_RDKitDescriptors(csv_name: str):
         str: A string describing the accuracy of the model on the training set and test set.
     """
     y_label_index = -1
-    test_data_output_path = 'backend_langchain/tmp/ChemLab_2/demo_test_descriptors.csv'
+    test_data_output_path = 'D:/PythonProject/Chem_AI/demo_test_descriptors.csv'
 
     try:
         X, y = load_and_prepare_RDKitdescriptors_data(test_data_output_path, y_label_index)
@@ -423,7 +617,7 @@ def AdaBoost_Classifier_RDKitDescriptors(csv_name: str):
         str: A string describing the accuracy of the model on the training set and test set.
     """
     y_label_index = -1
-    test_data_output_path = 'backend_langchain/tmp/ChemLab_2/demo_test_descriptors.csv'
+    test_data_output_path = 'D:/PythonProject/Chem_AI/demo_test_descriptors.csv'
 
     try:
         X, y = load_and_prepare_RDKitdescriptors_data(test_data_output_path, y_label_index)
@@ -449,7 +643,7 @@ def KNeighbors_Classifier_RDKitDescriptors(csv_name: str):
         str: A string describing the accuracy of the model on the training set and test set.
     """
     y_label_index = -1
-    test_data_output_path = 'backend_langchain/tmp/ChemLab_2/demo_test_descriptors.csv'
+    test_data_output_path = 'D:/PythonProject/Chem_AI/demo_test_descriptors.csv'
 
     try:
         X, y = load_and_prepare_RDKitdescriptors_data(test_data_output_path, y_label_index)
@@ -470,7 +664,13 @@ EXTRA_TOOL_NAME_DICT = {
     "GenerateRDKitDescriptorsFromCSV": Generate_RDKitDescriptors_from_csv,
 
     "MLPClassifierMorgan": MLP_Classifier_Morganfingerprints,
+    "RandomForestClassifierMorgan": RandomForest_Classifier_Morganfingerprints,
+    "AdaBoostClassifierMorgan": AdaBoost_Classifier_Morganfingerprints,
+    "KNeighborsClassifierMorgan": KNeighbors_Classifier_Morganfingerprints,
     "MLPClassifierSimplifiedMorgan": MLP_Classifier_Simplified_Morganfingerprints,
+    "RandomForestClassifierSimplifiedMorgan": RandomForest_Classifier_Simplified_Morganfingerprints,
+    "AdaBoostClassifierSimplifiedMorgan": AdaBoost_Classifier_Simplified_Morganfingerprints,
+    "KNeighborsClassifierSimplifiedMorgan": KNeighbors_Classifier_Simplified_Morganfingerprints,
     "MLPClassifierRDKit": MLP_Classifier_RDKitDescriptors,
     "RandomForestClassifierRDKit": RandomForest_Classifier_RDKitDescriptors,
     "AdaBoostClassifierRDKit": AdaBoost_Classifier_RDKitDescriptors,
@@ -486,7 +686,13 @@ TOOLS_MAPPING = {
         "GenerateRDKitDescriptorsFromCSV",
 
         "MLPClassifierMorgan",
+        "RandomForestClassifierMorgan",
+        "AdaBoostClassifierMorgan",
+        "KNeighborsClassifierMorgan",
         "MLPClassifierSimplifiedMorgan",
+        "RandomForestClassifierSimplifiedMorgan",
+        "AdaBoostClassifierSimplifiedMorgan",
+        "KNeighborsClassifierSimplifiedMorgan",
         "MLPClassifierRDKit",
         "RandomForestClassifierRDKit",
         "AdaBoostClassifierRDKit",
@@ -523,7 +729,9 @@ def get_tool_list(tools_param: List[str]) -> List[str]:
 
 def run_langchain(prompt, tools):
     llm = ChatOpenAI(
-        model_name="gpt-4-1106-preview",
+        model="",
+        api_key="",
+        base_url=""
     )
     # print(llm.invoke(prompt)+'\n')
 
@@ -552,11 +760,11 @@ if __name__ == "__main__":
 
     RADIUS = 3
     SIZE = 512
-
+    #
     y_label_index = 4
-
-    prompt = "我需要知道一些化合物反应的反应活性, 反应物以smiles形式由demo_test.csv给出, 请你将其转化为Morgan fingerprints特征进行表征,其中生成 Morgan fingerprints时的半径分别为3、4、5；size分别为256、512、1024，然后对于9种不同的指纹特征，分别使用MLP机器学习算法给出对应的预测结果，并告诉我什么情况下效果最佳。注意，每生成一种指纹时，都需要立即对该种指纹进行MLP预测。然后再生成另一种指纹。"
-    # prompt = "我需要知道一些化合物反应的反应活性, 反应物以smiles形式由demo_test.csv给出, 请你分别将其转化为RDK fingerprints、Morgan fingerprints和Electrical Descriptors特征进行表征（其中生成Morgan fingerprints时的半径为4；size为256），然后分别使用MLP机器学习算法给出对应的预测结果，并告诉我什么情况下效果最佳。"
+    #
+    prompt = ()
     tools = ['ChemicalTools']
 
     run_langchain(prompt, tools)
+
