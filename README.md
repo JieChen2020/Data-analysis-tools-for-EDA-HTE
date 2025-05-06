@@ -17,5 +17,40 @@ Some data analysis tools for high-throughput experimentation using the encapsula
 
 #### How to use
 
-1. 
+1. Fill in the LangSmith project information to monitor the LangChain execution process.
+
+```python
+os.environ["LANGCHAIN_TRACING_V2"] = ""
+os.environ["LANGCHAIN_ENDPOINT"] = ""
+os.environ["LANGCHAIN_API_KEY"] = ""
+os.environ["LANGCHAIN_PROJECT"] = ""
+```
+
+2. Fill in the LLM information.
+
+```python
+def run_langchain(prompt, tools):
+    llm = ChatOpenAI(
+        model="",
+        api_key="",
+        base_url=""
+    )
+```
+
+3. Fill in the prompt (task input) to start the LangChain process.
+
+```python
+if __name__ == "__main__":
+    global RADIUS, SIZE
+
+    RADIUS = 3
+    SIZE = 512
+    #
+    y_label_index = 4
+    #
+    prompt = ()
+    tools = ['ChemicalTools']
+
+    run_langchain(prompt, tools)
+```
 
