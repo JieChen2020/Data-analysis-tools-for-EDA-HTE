@@ -111,4 +111,21 @@ smi_file_path = 'mcule_purchasable_in_stock_250309.smi'
 acid = extract_acid_structures(smi_file_path)
 ```
 
-3. 
+3. Change the pattern according to the target molecular structure.
+
+```python
+pattern1 = Chem.MolFromSmarts('[NH2]')
+pattern = Chem.MolFromSmarts('C(=O)[OH]')
+```
+
+```python
+N_pattern = r'N'
+pattern1 = Chem.MolFromSmarts('[NH2]')
+pattern2 = Chem.MolFromSmarts('C1CCCC[NH]1')
+pattern3 = Chem.MolFromSmarts('C1C=CC=C([NH]C)C=1')
+pattern4 = Chem.MolFromSmarts('C1(CCCCC1)[NH]C')
+pattern5 = Chem.MolFromSmarts('[NH]1CCCC1')
+pattern6 = Chem.MolFromSmarts('C1CN(C)CC[NH]1')
+pattern7 = Chem.MolFromSmarts('C1C=CC=C(C[NH]C)C=1')
+pattern = Chem.MolFromSmarts('C(=O)[OH]')
+```
