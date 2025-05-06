@@ -77,4 +77,20 @@ df['predicted'] = (df['prob'] >= 0.5).astype(int)
 fpr, tpr, thresholds = roc_curve(df['gt'], df['prob'])
 ```
 
-2. ![Figure_1](assets/Figure_1.png)
+## **Tool 3: LangChain**
+
+#### Requirements
+
+1. Python 3.12
+2. rdkit 2024.9.6
+3. scikit-learn 1.6.1
+4. langchain 0.3.24
+5. langchain-community 0.3.23
+6. langchain-core 0.3.56
+7. langchain-openai 0.3.14
+8. langsmith 0.3.38
+
+#### How to use
+
+1. Fill in the LangSmith project information to monitor the LangChain execution process.
+
