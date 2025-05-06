@@ -478,9 +478,9 @@ def MLP_Classifier_Simplified_Morganfingerprints(csv_name: str):
 
         model = MLPClassifier(max_iter=500)
         kfold = KFold(n_splits=10, shuffle=True, random_state=42)
-        # 对模型进行 10 倍交叉验证
+
         results = cross_val_score(model, X, y, cv=kfold)
-        # 输出平均准确率
+
         res = f"\nAverage Accuracy: {results.mean()}\n"
         return res
     except Exception as e:
@@ -509,9 +509,9 @@ def RandomForest_Classifier_Simplified_Morganfingerprints(csv_name: str):
 
         model = RandomForestClassifier()
         kfold = KFold(n_splits=10, shuffle=True, random_state=42)
-        # 对模型进行 10 倍交叉验证
+
         results = cross_val_score(model, X, y, cv=kfold)
-        # 输出平均准确率
+
         res = f"\nAverage Accuracy: {results.mean()}\n"
         return res
     except Exception as e:
@@ -540,9 +540,9 @@ def AdaBoost_Classifier_Simplified_Morganfingerprints(csv_name: str):
 
         model = AdaBoostClassifier()
         kfold = KFold(n_splits=10, shuffle=True, random_state=42)
-        # 对模型进行 10 倍交叉验证
+
         results = cross_val_score(model, X, y, cv=kfold)
-        # 输出平均准确率
+
         res = f"\nAverage Accuracy: {results.mean()}\n"
         return res
     except Exception as e:
@@ -571,9 +571,9 @@ def KNeighbors_Classifier_Simplified_Morganfingerprints(csv_name: str):
 
         model = KNeighborsClassifier()
         kfold = KFold(n_splits=10, shuffle=True, random_state=42)
-        # 对模型进行 10 倍交叉验证
+
         results = cross_val_score(model, X, y, cv=kfold)
-        # 输出平均准确率
+
         res = f"\nAverage Accuracy: {results.mean()}\n"
         return res
     except Exception as e:
