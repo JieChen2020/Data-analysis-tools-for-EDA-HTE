@@ -86,7 +86,7 @@ fpr, tpr, thresholds = roc_curve(df['gt'], df['prob'])
 
 #### How to use
 
-1. Load 'Reaction kinetic data 60.csv' or CSV file with the same format
+1. Load 'Reaction kinetic data 60.csv' or CSV file with the same format.
 
 ```python
 # Load the csv file containing the data
@@ -103,6 +103,12 @@ data = pd.read_csv(file_path)
 
 #### How to use
 
-1. Download Mcule In Stock (mcule_purchasable_in_stock_250309.smi) from https://mcule.com/database/
-2. 
+1. Download Mcule In Stock (mcule_purchasable_in_stock_250309.smi) from https://mcule.com/database/.
+2. Load 'mcule_purchasable_in_stock_250309.smi' or SMI file with the same format.
+
+```python
+smi_file_path = 'mcule_purchasable_in_stock_250309.smi'
+acid = extract_acid_structures(smi_file_path)
+```
+
 3. 
