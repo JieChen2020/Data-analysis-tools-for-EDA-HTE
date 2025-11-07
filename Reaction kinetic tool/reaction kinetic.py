@@ -5,7 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # Load the csv file containing the data
-file_path = 'Reaction kinetic data 60.csv'
+file_path = 'SI 9.1 Reaction kinetic data 60.csv'
 data = pd.read_csv(file_path)
 
 # Extract the values from the DataFrame
@@ -117,3 +117,4 @@ plt.grid(True)
 
 
 plt.show()
+
