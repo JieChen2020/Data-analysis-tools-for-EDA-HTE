@@ -9,7 +9,7 @@ file_path = 'Reaction kinetic data 60.csv'
 data = pd.read_csv(file_path)
 
 # Extract the values from the DataFrame
-time = np.array([0, 0.5, 1, 1.5, 2, 3, 4, 5, 6])
+time = data['time'].to_numpy()
 concentration_c = data['concentration_c'].to_numpy()
 concentration_a = data['concentration_a'].to_numpy()
 initial_concentration_b = 2 * concentration_a[0]
