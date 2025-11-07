@@ -94,26 +94,26 @@ results = pd.DataFrame({
 
 print(results)
 
-# plt.figure(figsize=(10, 6))
-#
-#
-# plt.scatter(time, concentration_a, color='black', label='Experimental Data')
-#
-#
-# t_fit = np.linspace(0, 6, 500)
-#
-#
-# plt.plot(t_fit, odeint(model_r1a, [concentration_a[0]], t_fit, args=(popt_r1a[0],))[:, 0], label='Fit: r=k[a]', color='blue')
-# plt.plot(t_fit, odeint(model_r1ab, [concentration_a[0], initial_concentration_b], t_fit, args=(popt_r1ab[0],))[:, 0], label='Fit: r=k[a][b]', color='green')
-# plt.plot(t_fit, odeint(model_r1a2, [concentration_a[0]], t_fit, args=(popt_r1a2[0],))[:, 0], label='Fit: r=k[a]^2', color='red')
-# plt.plot(t_fit, odeint(model_r1ab2, [concentration_a[0], initial_concentration_b], t_fit, args=(popt_r1ab2[0],))[:, 0], label='Fit: r=k[a][b]^2', color='purple')
-#
-#
-# plt.xlabel('Time')
-# plt.ylabel('Concentration of C')
-# plt.title('Fitting Models to Experimental Data')
-# plt.legend()
-# plt.grid(True)
-#
-#
-# plt.show()
+plt.figure(figsize=(10, 6))
+
+
+plt.scatter(time, concentration_a, color='black', label='Experimental Data')
+
+
+t_fit = np.linspace(0, 6, 500)
+
+
+plt.plot(t_fit, odeint(model_r1a, [concentration_a[0]], t_fit, args=(popt_r1a[0],))[:, 0], label='Fit: r=k[a]', color='blue')
+plt.plot(t_fit, odeint(model_r1ab, [concentration_a[0], initial_concentration_b], t_fit, args=(popt_r1ab[0],))[:, 0], label='Fit: r=k[a][b]', color='green')
+plt.plot(t_fit, odeint(model_r1a2, [concentration_a[0]], t_fit, args=(popt_r1a2[0],))[:, 0], label='Fit: r=k[a]^2', color='red')
+plt.plot(t_fit, odeint(model_r1ab2, [concentration_a[0], initial_concentration_b], t_fit, args=(popt_r1ab2[0],))[:, 0], label='Fit: r=k[a][b]^2', color='purple')
+
+
+plt.xlabel('Time')
+plt.ylabel('Concentration of C')
+plt.title('Fitting Models to Experimental Data')
+plt.legend()
+plt.grid(True)
+
+
+plt.show()
