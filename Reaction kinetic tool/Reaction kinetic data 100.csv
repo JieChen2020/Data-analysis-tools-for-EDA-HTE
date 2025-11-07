@@ -1,4 +1,4 @@
-time/h,concentration_c,concentration_a
+time,concentration_c,concentration_a
 0,0.00000,0.05000
 0.5,0.00994,0.03819
 1,0.01606,0.03223
@@ -8,3 +8,4 @@ time/h,concentration_c,concentration_a
 4,0.03776,0.01138
 5,0.04081,0.00908
 6,0.04345,0.00707
+
