@@ -13,6 +13,7 @@ time = data['time'].to_numpy()
 concentration_c = data['concentration_c'].to_numpy()
 concentration_a = data['concentration_a'].to_numpy()
 initial_concentration_b = 2 * concentration_a[0]
+# initial_concentration_b = 1.25 * concentration_a[0] for SI 9.2 & 9.3
 print(concentration_c)
 
 
@@ -117,4 +118,5 @@ plt.grid(True)
 
 
 plt.show()
+
 
