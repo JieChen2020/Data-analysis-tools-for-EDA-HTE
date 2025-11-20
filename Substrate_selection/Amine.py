@@ -51,17 +51,17 @@ def save_to_csv(amine, output_file):
 smi_file_path = 'mcule_purchasable_in_stock_250309.smi'
 amine = extract_amine_structures(smi_file_path)
 
-output_file = 'data10.csv'
+output_file = 'extract_amine.csv'
 save_to_csv(amine, output_file)
 
 print(f"{output_file}")
 
 
-file_path = 'data10.csv'
+file_path = 'extract_amine.csv'
 df = pd.read_csv(file_path)
 
 sampled_df = df.sample(n=10000, random_state=1)
 
-sampled_df.to_csv('sampled_file.csv', index=False)
+sampled_df.to_csv('amine_sampled_file.csv', index=False)
 
 print(sampled_df.head())
