@@ -63,7 +63,7 @@ if __name__ == "__main__":
 
 #### How to use
 
-1. Load 'acidamine_result_w_probs.csv' or CSV file with the same format.
+1. Load 'acidamine_result_w_probs.csv' or CSV file with the same format, you can get the ROC result (ROC_curve.png and roc_curve_data.csv).
 
 ```python
 # Reading a CSV file
