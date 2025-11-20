@@ -86,7 +86,7 @@ fpr, tpr, thresholds = roc_curve(df['gt'], df['prob'])
 
 #### How to use
 
-1. Load 'SI 9.1 Reaction kinetic data 60.csv' or CSV file with the same format.
+1. Load 'SI 9.1 Reaction kinetic data 60.csv' or CSV file with the same format to obtain the results of the four kinetic models.
 
 ```python
 # Load the csv file containing the data
