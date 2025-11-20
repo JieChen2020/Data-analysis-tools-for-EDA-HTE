@@ -63,7 +63,7 @@ if __name__ == "__main__":
 
 #### How to use
 
-1. Load 'acidamine_result_w_probs.csv' or CSV file with the same format, you can get the ROC result (ROC_curve.png and roc_curve_data.csv).
+1. Load 'acidamine_result_w_probs.csv' or CSV file with the same format, you can obtain the ROC result (ROC_curve.png and roc_curve_data.csv).
 
 ```python
 # Reading a CSV file
@@ -131,6 +131,8 @@ pattern6 = Chem.MolFromSmarts('C1CN(C)CC[NH]1')
 pattern7 = Chem.MolFromSmarts('C1C=CC=C(C[NH]C)C=1')
 pattern = Chem.MolFromSmarts('C(=O)[OH]')
 ```
+
+4. You can obtain the acid substrate selection result (extract_acid.csv and acid_sampled_file.csv) and amine substrate selection result (extract_amine.csv and amine_sampled_file.csv).
 
 ## **Tool 5: TSNE_curve**
 
