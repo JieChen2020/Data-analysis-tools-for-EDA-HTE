@@ -44,13 +44,13 @@ def save_to_csv(acid, output_file):
 smi_file_path = 'mcule_purchasable_in_stock_250309.smi'
 acid = extract_acid_structures(smi_file_path)
 
-output_file = 'data10.csv'
+output_file = 'extract_acid.csv'
 save_to_csv(acid, output_file)
 
 print(f"{output_file}")
 
 
-file_path = 'data10.csv'
+file_path = 'extract_acid.csv'
 df = pd.read_csv(file_path)
 
 sampled_df = df.sample(n=10000, random_state=1)
