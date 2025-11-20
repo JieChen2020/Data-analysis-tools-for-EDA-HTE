@@ -145,8 +145,10 @@ For more information, see: https://chemplot.readthedocs.io/en/latest/index.html
 
 #### How to use
 
-1. Load 'filtered_molecules.csv' or CSV file with the same format.
+1. Load 'acid_sampled_file.csv' or CSV file with the same format.
 
 ```python
-data_BBBP = read_csv('filtered_molecules.csv')
+data_BBBP = read_csv('acid_sampled_file.csv')
 ```
+
+2. You can obtain TSNE result (acid_TSNE.csv and amine_TSNE.csv).
