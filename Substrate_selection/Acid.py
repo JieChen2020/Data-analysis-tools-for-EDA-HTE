@@ -55,7 +55,7 @@ df = pd.read_csv(file_path)
 
 sampled_df = df.sample(n=10000, random_state=1)
 
-sampled_df.to_csv('sampled_file.csv', index=False)
+sampled_df.to_csv('acid_sampled_file.csv', index=False)
 
 print(sampled_df.head())
 
