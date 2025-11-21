@@ -15,7 +15,7 @@ from sklearn.model_selection import KFold, cross_val_score, cross_val_predict
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.utils import shuffle
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, mean_squared_error
 from sklearn.neural_network import MLPClassifier
 import seaborn as sns
 
@@ -25,11 +25,14 @@ from langchain_openai import ChatOpenAI
 from langchain import hub
 from langchain.agents import AgentExecutor, create_react_agent
 import langsmith
+import random
+from langchain.prompts import PromptTemplate
 
-# os.environ["LANGCHAIN_TRACING_V2"] = ""
-# os.environ["LANGCHAIN_ENDPOINT"] = ""
-# os.environ["LANGCHAIN_API_KEY"] = ""
-# os.environ["LANGCHAIN_PROJECT"] = ""
+os.environ["LANGCHAIN_TRACING_V2"] = "false"
+os.environ["LANGCHAIN_DEBUG"] = "false"
+os.environ["LANGCHAIN_ENDPOINT"] = "xx"
+os.environ["LANGCHAIN_API_KEY"] = "xx"
+os.environ["LANGCHAIN_PROJECT"] = "xx"
 
 
 def param_decorator(func):
@@ -108,6 +111,7 @@ def Generate_Morganfingerprints_from_csv(csv_name: str, radius: str, size: str):
     # Create a new DataFrame with the fingerprints and the remaining data
     fp_data = pd.DataFrame(fingerprints, columns=['B_Fingerprint', 'C_Fingerprint', 'Product_Fingerprint'])
     result_data = pd.concat([fp_data, data.iloc[:, 3:]], axis=1)
+    # print(fingerprints, result_data)
 
     # Save the resulting DataFrame to a new CSV file
     result_data.to_csv(test_data_output_path, index=False)
@@ -186,7 +190,7 @@ def Generate_RDKitDescriptors_from_csv(csv_name: str):
     test_data_output_path = f'D:/PythonProject/Chem_AI/demo_test_descriptors.csv'
 
     data = pd.read_csv(test_data_input_path)
-    if len(data.columns) < 3:
+    if len(data.columns) < 2:
         return "Error: The CSV file must have at least three columns for SMILES strings."
 
     descriptor_keys = ['MaxEStateIndex', 'MinAbsEStateIndex', 'MinEStateIndex', 'qed',
@@ -221,7 +225,7 @@ def Generate_RDKitDescriptors_from_csv(csv_name: str):
 
     descriptors_list = []
     # Process each of the first three SMILES string columns
-    for col in data.columns[:3]:  # Assumes the first three columns are SMILES strings
+    for col in data.columns[:2]:  # Assumes the first two columns are SMILES strings
         descriptors = []
         for smi in data[col]:
             mol = Chem.MolFromSmiles(smi)
@@ -239,40 +243,24 @@ def Generate_RDKitDescriptors_from_csv(csv_name: str):
     all_descriptors = pd.concat(descriptors_list, axis=1)
     result_data = pd.concat([all_descriptors, data.iloc[:, 3:]],
                             axis=1)  # Concatenate descriptors with conversion data columns
-
     # Save the resulting DataFrame to a new CSV file
     result_data.to_csv(test_data_output_path, index=False)
 
     return f"\nProcessed SMILES strings and saved descriptors to {test_data_output_path}"
 
 
-def custom_normalize(X):
-    """
-    Normalize each column of the matrix X using min-max scaling.
-    Skip normalization for elements that are zero.
-    """
-    X_normalized = X.copy()
-    for column in X.columns:
-        min_val = X[column].min()
-        max_val = X[column].max()
-        if max_val == min_val:
-            continue  # Skip normalization if min and max values are the same
-        X_normalized[column] = X[column].apply(lambda x: (x - min_val) / (max_val - min_val) if x != 0 else 0)
-    return X_normalized
-
-
-def load_and_prepare_RDKitdescriptors_data(csv_file, y_label_index):
+def load_and_prepare_RDKitdescriptors_data(csv_file):
     """
     Load data from a CSV file and prepare it for machine learning models.
 
     Args:
         csv_file: Path to the CSV file containing the data.
-        y_label_index: The column index of the label in the CSV file.
 
     Returns:
         tuple: A tuple containing the features as a numpy array and the labels as a numpy array.
     """
     data = pd.read_csv(csv_file)
+    y_label_index = -2
 
     # Assuming that all except the last two columns are features if y_label_index is -2 (the second last column as label)
     if y_label_index == -2:
@@ -290,7 +278,8 @@ def load_and_prepare_RDKitdescriptors_data(csv_file, y_label_index):
     X = X.fillna(0.0)
 
     # Normalize features
-    X_normalized = custom_normalize(X)
+    scaler = StandardScaler()
+    X_normalized = scaler.fit_transform(X)
 
     # Convert labels to category based on a specific threshold or logic
     y = y.apply(lambda x: 0 if x <= 33 else (1 if x <= 66 else 2))
@@ -308,11 +297,13 @@ def MLP_Classifier_RDKitDescriptors(csv_name: str):
     Returns:
         str: A string describing the accuracy of the model on the training set and test set.
     """
-    y_label_index = -1
+    global RADIUS, SIZE
     test_data_output_path = 'D:/PythonProject/Chem_AI/demo_test_descriptors.csv'
+    test_data_output_path1 = f'D:/PythonProject/Chem_AI/demo_test_simpilified_morgan_fingerprints_{RADIUS}_{SIZE}.csv'
 
     try:
-        X, y = load_and_prepare_RDKitdescriptors_data(test_data_output_path, y_label_index)
+        # X, y = load_and_prepare_combined_features(test_data_output_path, test_data_output_path1)
+        X, y = load_and_prepare_RDKitdescriptors_data(test_data_output_path)
 
         model = MLPClassifier(max_iter=800)
         kfold = KFold(n_splits=10, shuffle=True, random_state=42)
@@ -341,7 +332,7 @@ def MLP_Classifier_Morganfingerprints(csv_name: str):
     test_data_output_path = f'D:/PythonProject/Chem_AI/demo_test_morgan_fingerprints_{RADIUS}_{SIZE}.csv'
 
     try:
-        X, y = load_and_prepare_Morganfingerprints_data(test_data_output_path, y_label_index)
+        X, y = load_and_prepare_Morganfingerprints_data(test_data_output_path)
 
         model = MLPClassifier(max_iter=500)
         kfold = KFold(n_splits=10, shuffle=True, random_state=42)
@@ -371,7 +362,7 @@ def RandomForest_Classifier_Morganfingerprints(csv_name: str):
     test_data_output_path = f'D:/PythonProject/Chem_AI/demo_test_morgan_fingerprints_{RADIUS}_{SIZE}.csv'
 
     try:
-        X, y = load_and_prepare_Morganfingerprints_data(test_data_output_path, y_label_index)
+        X, y = load_and_prepare_Morganfingerprints_data(test_data_output_path)
 
         model = RandomForestClassifier()
         kfold = KFold(n_splits=10, shuffle=True, random_state=42)
@@ -401,7 +392,7 @@ def AdaBoost_Classifier_Morganfingerprints(csv_name: str):
     test_data_output_path = f'D:/PythonProject/Chem_AI/demo_test_morgan_fingerprints_{RADIUS}_{SIZE}.csv'
 
     try:
-        X, y = load_and_prepare_Morganfingerprints_data(test_data_output_path, y_label_index)
+        X, y = load_and_prepare_Morganfingerprints_data(test_data_output_path)
 
         model = AdaBoostClassifier()
         kfold = KFold(n_splits=10, shuffle=True, random_state=42)
@@ -431,7 +422,7 @@ def KNeighbors_Classifier_Morganfingerprints(csv_name: str):
     test_data_output_path = f'D:/PythonProject/Chem_AI/demo_test_morgan_fingerprints_{RADIUS}_{SIZE}.csv'
 
     try:
-        X, y = load_and_prepare_Morganfingerprints_data(test_data_output_path, y_label_index)
+        X, y = load_and_prepare_Morganfingerprints_data(test_data_output_path)
 
         model = KNeighborsClassifier()
         kfold = KFold(n_splits=10, shuffle=True, random_state=42)
@@ -444,16 +435,57 @@ def KNeighbors_Classifier_Morganfingerprints(csv_name: str):
         return f"Error during model training or evaluation: {str(e)}"
 
 
-def load_and_prepare_Morganfingerprints_data(csv_file, y_label_index):
+def load_and_prepare_Morganfingerprints_data(csv_file):
     data = pd.read_csv(csv_file)
-    features1 = data.iloc[:, :1].apply(lambda row: np.array([int(x) for x in ''.join(row.values)]), axis=1)
-    features2 = data.iloc[:, 1:2].apply(lambda row: np.array([int(x) for x in ''.join(row.values)]), axis=1)
-    features3 = data.iloc[:, 2:3].apply(lambda row: np.array([int(x) for x in ''.join(row.values)]), axis=1)
+    features1 = data.iloc[:, 0].apply(lambda x: np.array([int(i) for i in x]))
+    features2 = data.iloc[:, 1].apply(lambda x: np.array([int(i) for i in x]))
+    features3 = data.iloc[:, 2].apply(lambda x: np.array([int(i) for i in x]))
     features = features1 + features2 - features3
-    labels = data.iloc[:, y_label_index]
+    features = np.vstack(features)
+
+    labels = data.iloc[:, 3]
     features = np.array(features.tolist())
     labels = labels.apply(lambda x: 0 if x <= 33 else (1 if x <= 66 else 2))
     return features, labels
+
+
+def load_and_prepare_combined_features(rdkit_csv, morgan_csv):
+    """
+    Combine RDKit descriptors and Morgan fingerprints into a single feature matrix.
+
+    Args:
+        rdkit_csv (str): Path to the CSV file containing RDKit descriptors.
+        morgan_csv (str): Path to the CSV file containing Morgan fingerprints.
+
+    Returns:
+        tuple: (X_combined, y_combined)
+               X_combined -> concatenated feature matrix (numpy.ndarray)
+               y_combined -> categorical labels (pandas.Series)
+    """
+
+    rdkit_data = pd.read_csv(rdkit_csv)
+    y_label_index = -2
+    if y_label_index == -2:
+        X_rdkit = rdkit_data.iloc[:, :-2]
+        y = rdkit_data.iloc[:, y_label_index]
+    else:
+        X_rdkit = rdkit_data.iloc[:, :y_label_index]
+        y = rdkit_data.iloc[:, y_label_index]
+
+    X_rdkit = X_rdkit.apply(pd.to_numeric, errors='coerce').fillna(0.0)
+    scaler = StandardScaler()
+    X_rdkit = scaler.fit_transform(X_rdkit)
+
+    morgan_data = pd.read_csv(morgan_csv)
+    features1 = morgan_data.iloc[:, :1].apply(lambda row: np.array([int(x) for x in ''.join(row.values)]), axis=1)
+    features2 = morgan_data.iloc[:, 1:2].apply(lambda row: np.array([int(x) for x in ''.join(row.values)]), axis=1)
+    X_morgan = np.vstack([np.concatenate([f1, f2]) for f1, f2 in zip(features1, features2)])
+
+    X_combined = np.concatenate([X_rdkit, X_morgan], axis=1)
+
+    y = y.apply(lambda x: 0 if x <= 33 else (1 if x <= 66 else 2))
+
+    return X_combined, y
 
 
 def MLP_Classifier_Simplified_Morganfingerprints(csv_name: str):
@@ -474,13 +506,11 @@ def MLP_Classifier_Simplified_Morganfingerprints(csv_name: str):
 
     try:
 
-        X, y = load_and_prepare_Morganfingerprints_data(test_data_output_path, y_label_index)
+        X, y = load_and_prepare_Morganfingerprints_data(test_data_output_path)
 
         model = MLPClassifier(max_iter=500)
         kfold = KFold(n_splits=10, shuffle=True, random_state=42)
-
         results = cross_val_score(model, X, y, cv=kfold)
-
         res = f"\nAverage Accuracy: {results.mean()}\n"
         return res
     except Exception as e:
@@ -505,13 +535,11 @@ def RandomForest_Classifier_Simplified_Morganfingerprints(csv_name: str):
 
     try:
 
-        X, y = load_and_prepare_Morganfingerprints_data(test_data_output_path, y_label_index)
+        X, y = load_and_prepare_Morganfingerprints_data(test_data_output_path)
 
         model = RandomForestClassifier()
         kfold = KFold(n_splits=10, shuffle=True, random_state=42)
-
         results = cross_val_score(model, X, y, cv=kfold)
-
         res = f"\nAverage Accuracy: {results.mean()}\n"
         return res
     except Exception as e:
@@ -536,13 +564,11 @@ def AdaBoost_Classifier_Simplified_Morganfingerprints(csv_name: str):
 
     try:
 
-        X, y = load_and_prepare_Morganfingerprints_data(test_data_output_path, y_label_index)
+        X, y = load_and_prepare_Morganfingerprints_data(test_data_output_path)
 
         model = AdaBoostClassifier()
         kfold = KFold(n_splits=10, shuffle=True, random_state=42)
-
         results = cross_val_score(model, X, y, cv=kfold)
-
         res = f"\nAverage Accuracy: {results.mean()}\n"
         return res
     except Exception as e:
@@ -567,13 +593,11 @@ def KNeighbors_Classifier_Simplified_Morganfingerprints(csv_name: str):
 
     try:
 
-        X, y = load_and_prepare_Morganfingerprints_data(test_data_output_path, y_label_index)
+        X, y = load_and_prepare_Morganfingerprints_data(test_data_output_path)
 
         model = KNeighborsClassifier()
         kfold = KFold(n_splits=10, shuffle=True, random_state=42)
-
         results = cross_val_score(model, X, y, cv=kfold)
-
         res = f"\nAverage Accuracy: {results.mean()}\n"
         return res
     except Exception as e:
@@ -590,11 +614,13 @@ def RandomForest_Classifier_RDKitDescriptors(csv_name: str):
     Returns:
         str: A string describing the accuracy of the model on the training set and test set.
     """
-    y_label_index = -1
+    global RADIUS, SIZE
     test_data_output_path = 'D:/PythonProject/Chem_AI/demo_test_descriptors.csv'
+    test_data_output_path1 = f'D:/PythonProject/Chem_AI/demo_test_simpilified_morgan_fingerprints_{RADIUS}_{SIZE}.csv'
 
     try:
-        X, y = load_and_prepare_RDKitdescriptors_data(test_data_output_path, y_label_index)
+        # X, y = load_and_prepare_combined_features(test_data_output_path, test_data_output_path1)
+        X, y = load_and_prepare_RDKitdescriptors_data(test_data_output_path)
 
         model = RandomForestClassifier()
         kfold = KFold(n_splits=10, shuffle=True, random_state=42)
@@ -616,11 +642,13 @@ def AdaBoost_Classifier_RDKitDescriptors(csv_name: str):
     Returns:
         str: A string describing the accuracy of the model on the training set and test set.
     """
-    y_label_index = -1
+    global RADIUS, SIZE
     test_data_output_path = 'D:/PythonProject/Chem_AI/demo_test_descriptors.csv'
+    test_data_output_path1 = f'D:/PythonProject/Chem_AI/demo_test_simpilified_morgan_fingerprints_{RADIUS}_{SIZE}.csv'
 
     try:
-        X, y = load_and_prepare_RDKitdescriptors_data(test_data_output_path, y_label_index)
+        # X, y = load_and_prepare_combined_features(test_data_output_path, test_data_output_path1)
+        X, y = load_and_prepare_RDKitdescriptors_data(test_data_output_path)
 
         model = AdaBoostClassifier()
         kfold = KFold(n_splits=10, shuffle=True, random_state=42)
@@ -642,11 +670,13 @@ def KNeighbors_Classifier_RDKitDescriptors(csv_name: str):
     Returns:
         str: A string describing the accuracy of the model on the training set and test set.
     """
-    y_label_index = -1
+    global RADIUS, SIZE
     test_data_output_path = 'D:/PythonProject/Chem_AI/demo_test_descriptors.csv'
+    test_data_output_path1 = f'D:/PythonProject/Chem_AI/demo_test_simpilified_morgan_fingerprints_{RADIUS}_{SIZE}.csv'
 
     try:
-        X, y = load_and_prepare_RDKitdescriptors_data(test_data_output_path, y_label_index)
+        # X, y = load_and_prepare_combined_features(test_data_output_path, test_data_output_path1)
+        X, y = load_and_prepare_RDKitdescriptors_data(test_data_output_path)
 
         model = KNeighborsClassifier()
         kfold = KFold(n_splits=10, shuffle=True, random_state=42)
@@ -697,13 +727,7 @@ TOOLS_MAPPING = {
         "RandomForestClassifierRDKit",
         "AdaBoostClassifierRDKit",
         "KNeighborsClassifierRDKit"
-    ],
-    # "BiologyTools": [
-    #     "ComputeExtinctionCoefficient",
-    # ],
-    # "MaterialTools": [
-    #     "MaterialInfo",
-    # ]    
+    ]
 }
 
 
@@ -720,6 +744,23 @@ def load_tool_from_name(names, llm):
     return tools
 
 
+import langchain_openai.chat_models.base as base
+
+
+def safe_create_usage_metadata(token_usage):
+    input_tokens = token_usage.get("prompt_tokens") or 0
+    output_tokens = token_usage.get("completion_tokens") or 0
+    total_tokens = token_usage.get("total_tokens") or (input_tokens + output_tokens)
+    return {
+        "input_tokens": input_tokens,
+        "output_tokens": output_tokens,
+        "total_tokens": total_tokens,
+    }
+
+
+base._create_usage_metadata = safe_create_usage_metadata
+
+
 def get_tool_list(tools_param: List[str]) -> List[str]:
     tool_list = []
     for category in tools_param:
@@ -727,32 +768,76 @@ def get_tool_list(tools_param: List[str]) -> List[str]:
     return tool_list
 
 
+def load_tool_from_name(names, llm):
+    tools = []
+    for name in names:
+        if name in EXTRA_TOOL_NAME_DICT:
+            func = EXTRA_TOOL_NAME_DICT[name]
+            description = func.__doc__ or ""
+            tools.append(Tool.from_function(func=func, name=name, description=description, return_direct=False))
+        else:
+            tools.extend(load_tools([name], llm=llm))
+    return tools
+
+
 def run_langchain(prompt, tools):
     llm = ChatOpenAI(
-        model="",
-        api_key="",
-        base_url=""
+        model="xx",
+        api_key="xx",
+        base_url="xx",
+        streaming=False,
+        request_timeout=180,
+        max_retries=0
     )
-    # print(llm.invoke(prompt)+'\n')
 
     tool_list = get_tool_list(tools)
-    # print(f"tool_list:{tool_list}")
     if tool_list:
         tools = load_tool_from_name(tool_list, llm)
-        # print(f"tools:{tools[0].run('C')}")
-        # exit(0)
-        agent = create_react_agent(tools=tools, llm=llm, prompt=hub.pull("hwchase17/react"))
-        # agent = create_structured_chat_agent(tools=tools, llm=llm, prompt=hub.pull("hwchase17/structured-chat-agent"))
-        # print(hub.pull("hwchase17/react"))
-        # exit(0)
-        agent_executor = AgentExecutor(
-            agent=agent, tools=tools, verbose=True, handle_parsing_errors=True
+
+
+        react_prompt = PromptTemplate.from_template(""" 
+You are a reasoning agent that can use tools to solve problems.
+
+You have access to the following tools:
+{tools}
+
+Use the following format:
+
+Question: {input}
+Thought: you should always think about what to do next
+Action: the action to take, one of [{tool_names}]
+Action Input: the input to that action
+Observation: the result of the action
+... (this Thought/Action/Observation can repeat as many times as needed) ...
+Thought: I now know the final answer
+Final Answer: the answer to the original question
+
+Begin!
+
+Question: {input}
+{agent_scratchpad}
+""")
+
+        agent = create_react_agent(
+            llm=llm,
+            tools=tools,
+            prompt=react_prompt
         )
-        # 
-        agent_executor.invoke({"input": prompt})
-        # response = agent.run(prompt)
+
+        agent_executor = AgentExecutor(
+            agent=agent,
+            tools=tools,
+            verbose=True,
+            handle_parsing_errors=True,
+            max_iterations=100
+        )
+
+        result = agent_executor.invoke({"input": prompt})
+        print(result["output"] if "output" in result else result)
+
     else:
         response = llm.invoke(prompt)
+        print(response)
 
 
 if __name__ == "__main__":
@@ -760,11 +845,10 @@ if __name__ == "__main__":
 
     RADIUS = 3
     SIZE = 512
-    #
-    y_label_index = 4
-    #
-    prompt = ()
+    prompt = ('The task is to search for the best-performing combination of molecular descriptor and classification algorithm to build a predictive model for a chemical reaction. This reaction data is given by demo_test.csv and simplified demo_test.csv. '
+              'Convert demo_test.csv to RDKit descriptors and Morgan fingerprints, and convert simplified demo_test.csv to simplified Morgan fingerprints. Then, using the four algorithms MLP, RandomForest, AdaBoost, and KNeighbors, combine the three Molecule descriptors to obtain the corresponding prediction results. '
+              'Finally, give out which combination has the highest predicted value.')
     tools = ['ChemicalTools']
 
     run_langchain(prompt, tools)
-
+    # print(load_and_prepare_Morganfingerprints_data('D:/PythonProject/Chem_AI/demo_test_morgan_fingerprints_3_512.csv'))
