@@ -49,10 +49,7 @@ if __name__ == "__main__":
 
     RADIUS = 3
     SIZE = 512
-    #
-    y_label_index = 4
-    #
-    prompt = ()
+    prompt = ('xxxxxx')
     tools = ['ChemicalTools']
 
     run_langchain(prompt, tools)
